@@ -8,8 +8,9 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      // Get the base URL from Replit domain environment variable or construct it
-      let baseUrl = process.env.REPLIT_DOMAIN ? `https://${process.env.REPLIT_DOMAIN}` : `${req.protocol}://${req.get('host')}`;
+      // Always use HTTPS for Replit
+      const host = req.get('host');
+      const baseUrl = `https://${host}`;
       
       const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(baseUrl)}`;
       
@@ -119,12 +120,16 @@ const authController = {
         });
       }
 
+      // Calculate expiration date (default to 24 hours if not provided)
+      const expiresInSeconds = expires_in || 86400;
+      const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+
       await prisma.cliqToken.create({
         data: {
           userId: user.id,
           accessToken: access_token,
           refreshToken: refresh_token,
-          expiresAt: new Date(Date.now() + expires_in * 1000)
+          expiresAt
         }
       });
 
