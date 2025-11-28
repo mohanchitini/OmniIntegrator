@@ -1,0 +1,60 @@
+{
+  "name": "Trello Integration",
+  "version": "1.0.0",
+  "description": "AI-powered Trello integration for Zoho Cliq with real-time sync and insights",
+  "icon": "https://cdn.iconscout.com/icon/free/png-256/trello-226534.png",
+  "permissions": [
+    "webhook.create",
+    "message.post",
+    "bot.invoke"
+  ],
+  "bot": {
+    "name": "TrelloBot",
+    "uniqueName": "trellobot",
+    "description": "Trello integration bot for task management",
+    "webhookUrl": "https://your-server-url.com/api/cliq/bot"
+  },
+  "commands": [
+    {
+      "name": "trello_connect",
+      "description": "Connect your Trello account",
+      "hint": "/trello connect",
+      "webhookUrl": "https://your-server-url.com/api/cliq/command"
+    },
+    {
+      "name": "trello_boards",
+      "description": "List all your Trello boards",
+      "hint": "/trello boards",
+      "webhookUrl": "https://your-server-url.com/api/cliq/command"
+    },
+    {
+      "name": "trello_create_card",
+      "description": "Create a new Trello card",
+      "hint": "/trello create_card <list_id> <card_name>",
+      "webhookUrl": "https://your-server-url.com/api/cliq/command"
+    },
+    {
+      "name": "trello_mytasks",
+      "description": "View your active Trello tasks",
+      "hint": "/trello mytasks",
+      "webhookUrl": "https://your-server-url.com/api/cliq/command"
+    },
+    {
+      "name": "trello_summary",
+      "description": "Get AI-powered summary of your Trello boards",
+      "hint": "/trello summary",
+      "webhookUrl": "https://your-server-url.com/api/cliq/command"
+    }
+  ],
+  "widgets": [
+    {
+      "name": "Trello Dashboard",
+      "uniqueName": "trello_dashboard",
+      "description": "Kanban dashboard with AI insights",
+      "type": "panel",
+      "source": "./widgets/dashboard/index.html",
+      "height": "600px",
+      "width": "100%"
+    }
+  ]
+}

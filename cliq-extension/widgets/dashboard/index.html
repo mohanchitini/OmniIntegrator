@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trello Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="dashboard-header">
+            <h1>📋 Trello Dashboard</h1>
+            <div class="sync-status">
+                <span id="sync-indicator" class="sync-indicator">●</span>
+                <span id="sync-text">Synced</span>
+                <button id="refresh-btn" class="btn-refresh">🔄 Refresh</button>
+            </div>
+        </header>
+
+        <div class="analytics-section">
+            <div class="analytics-card">
+                <div class="analytics-value" id="total-cards">0</div>
+                <div class="analytics-label">Total Cards</div>
+            </div>
+            <div class="analytics-card">
+                <div class="analytics-value" id="completed-cards">0</div>
+                <div class="analytics-label">Completed</div>
+            </div>
+            <div class="analytics-card urgent">
+                <div class="analytics-value" id="urgent-cards">0</div>
+                <div class="analytics-label">Urgent</div>
+            </div>
+            <div class="analytics-card overdue">
+                <div class="analytics-value" id="overdue-cards">0</div>
+                <div class="analytics-label">Overdue</div>
+            </div>
+        </div>
+
+        <div class="kanban-board" id="kanban-board">
+            <div class="loading">Loading your Trello boards...</div>
+        </div>
+
+        <div class="ai-insights-section" id="ai-insights">
+            <h2>🤖 AI Insights</h2>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <h3>Priority Heatmap</h3>
+                    <div id="priority-heatmap" class="heatmap">
+                        <div class="priority-bar high" data-priority="high">
+                            <span>High</span>
+                            <div class="bar-fill" id="high-priority-bar"></div>
+                        </div>
+                        <div class="priority-bar medium" data-priority="medium">
+                            <span>Medium</span>
+                            <div class="bar-fill" id="medium-priority-bar"></div>
+                        </div>
+                        <div class="priority-bar low" data-priority="low">
+                            <span>Low</span>
+                            <div class="bar-fill" id="low-priority-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="insight-card">
+                    <h3>Productivity Score</h3>
+                    <div class="productivity-score">
+                        <div class="score-circle">
+                            <span id="productivity-score">0</span>%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

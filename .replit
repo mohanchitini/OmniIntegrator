@@ -1,0 +1,65 @@
+modules = ["nodejs-20", "python-3.11"]
+[agent]
+expertMode = true
+
+[userenv]
+
+[userenv.shared]
+DATABASE_URL = "file:./dev.db"
+PORT = "3000"
+NODE_ENV = "development"
+LOG_LEVEL = "info"
+AI_SERVICE_URL = "http://localhost:8000"
+JWT_SECRET = "your_jwt_secret_change_in_production"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "AI Microservice"
+
+[[workflows.workflow]]
+name = "Backend Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd server && npm start"
+waitForPort = 3000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "AI Microservice"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd ai-service && python main.py"
+waitForPort = 8000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 43693
+externalPort = 80

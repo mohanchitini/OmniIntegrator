@@ -1,0 +1,236 @@
+✅ TITLE:
+
+AI-Powered Trello ⇆ Zoho Cliq Omni-Integrator — Full Extension + Sync Server + AI Microservice
+
+🎯 GOAL:
+
+Generate a complete, production-ready, multi-module system that integrates Trello with Zoho Cliq, including:
+
+Zoho Cliq Extension (Bot + Commands + Dashboard Widget)
+
+Backend Sync Server (OAuth, APIs, Webhooks, DB)
+
+AI Microservice (Summary, Task Extraction, Priority Insights)
+
+Real-time sync engine
+
+Clean UI Dashboard
+
+Fully documented setup
+
+This is the first module of a future multi-integration framework.
+
+📦 REPLIT MUST GENERATE THE FOLLOWING FOLDERS & FILES
+1️⃣ Backend (Node.js + Express + Prisma + SQLite)
+
+Create a folder:
+
+/server/
+  app.js
+  routes/
+    auth.js
+    trello.js
+    cliq.js
+    sync.js
+  controllers/
+    authController.js
+    trelloController.js
+    cliqController.js
+    aiController.js
+  services/
+    trelloService.js
+    cliqService.js
+    aiService.js
+    syncService.js
+  utils/
+    logger.js
+    verifySignature.js
+  prisma/
+    schema.prisma
+  package.json
+
+Backend Requirements:
+🔐 Trello OAuth 2.0
+
+Authorize
+
+Callback
+
+Token handling
+
+Refresh token support
+
+🔐 Zoho Cliq OAuth
+
+Bot access token
+
+Slash command verification
+
+🌐 API Endpoints
+GET   /api/trello/boards
+GET   /api/trello/lists/:boardId
+GET   /api/trello/cards/:listId
+POST  /api/trello/create_card
+POST  /api/cliq/command
+POST  /webhook/trello
+
+🔁 Real-Time Sync Engine
+
+Compare Trello → DB
+
+Push updates to Zoho Cliq bot
+
+Refresh dashboard widget
+
+🗄️ Prisma + SQLite DB Schema
+User
+TrelloToken
+CliqToken
+TrelloBoard
+TrelloList
+TrelloCard
+AIInsights
+SyncLog
+
+2️⃣ Zoho Cliq Extension Package
+
+Create folder:
+
+/cliq-extension/
+  manifest.json
+  bot/
+    bot.js
+  commands/
+    trello_connect.js
+    trello_boards.js
+    trello_create_card.js
+    trello_mytasks.js
+    trello_summary.js
+  widgets/
+    dashboard/
+      index.html
+      style.css
+      app.js
+
+Extension Requirements:
+🤖 Bot
+
+Sends Trello updates
+
+Sends AI summaries
+
+Replies to events
+
+⌨ Slash Commands:
+
+/trello connect
+
+/trello boards
+
+/trello create_card
+
+/trello summary
+
+/trello mytasks
+
+Each command must call backend APIs.
+
+3️⃣ Dashboard Widget (HTML + CSS + JS)
+
+Must include:
+
+📌 Kanban UI
+
+Columns for:
+
+To Do
+
+Doing
+
+Done
+
+🔥 AI Insights
+
+Priority heatmap
+
+Task summaries
+
+Progress analytics
+
+🔁 Auto-refresh every 20 seconds
+4️⃣ AI Microservice (Python + FastAPI)
+
+Create folder:
+
+/ai-service/
+  main.py
+  requirements.txt
+
+Endpoints:
+POST /summarize
+POST /extract_tasks
+POST /priority
+POST /analytics
+
+AI Functions:
+
+Summarize Trello cards
+
+Extract tasks from chat messages
+
+Classify priority
+
+Generate productivity analytics
+
+Uses OpenAI or Gemini API.
+
+5️⃣ Environment Variables
+
+Replit must use .env with:
+
+TRELLO_CLIENT_ID=
+TRELLO_CLIENT_SECRET=
+TRELLO_REDIRECT_URL=
+CLIQ_CLIENT_ID=
+CLIQ_CLIENT_SECRET=
+AI_API_KEY=
+DATABASE_URL="file:./dev.db"
+
+6️⃣ Documentation (Auto-generate)
+
+Create:
+
+README.md
+
+Setup steps
+
+Trello OAuth setup guide
+
+Zoho Cliq extension installation steps
+
+How to run locally
+
+Backend → AI → Widget integration doc
+
+Mermaid architecture diagram
+
+🧠 REPLIT AI — INSTRUCTIONS
+
+Replit MUST:
+
+✔ Generate ALL files
+✔ Write fully functional code
+✔ Add comments everywhere
+✔ Ensure no placeholder code
+✔ Include real API logic
+✔ Make backend, extension, widget, and AI service work together
+✔ Ensure import paths are correct
+✔ Use clean production-level folder structure
+
+⭐ ONE-LINE FOR METADATA
+
+AI-powered Trello ⇆ Zoho Cliq Integration with full task sync, dashboards, webhooks, slash commands, and AI-powered productivity insights.
+
+🔥 BEGIN FULL PROJECT GENERATION NOW
+
+Create the complete project exactly as described.

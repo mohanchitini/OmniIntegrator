@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  trelloTokens  TrelloToken[]
+  cliqTokens    CliqToken[]
+  syncLogs      SyncLog[]
+}
+
+model TrelloToken {
+  id           String   @id @default(uuid())
+  userId       String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model CliqToken {
+  id           String   @id @default(uuid())
+  userId       String
+  accessToken  String
+  refreshToken String?
+  botToken     String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model TrelloBoard {
+  id          String       @id
+  userId      String
+  name        String
+  description String?
+  url         String?
+  closed      Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  lists       TrelloList[]
+  
+  @@index([userId])
+}
+
+model TrelloList {
+  id        String       @id
+  boardId   String
+  name      String
+  position  Float
+  closed    Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  board     TrelloBoard  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards     TrelloCard[]
+  
+  @@index([boardId])
+}
+
+model TrelloCard {
+  id          String       @id
+  listId      String
+  name        String
+  description String?
+  dueDate     DateTime?
+  labels      String?
+  members     String?
+  position    Float
+  closed      Boolean      @default(false)
+  url         String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  list        TrelloList   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  aiInsights  AIInsights[]
+  
+  @@index([listId])
+}
+
+model AIInsights {
+  id          String      @id @default(uuid())
+  cardId      String
+  summary     String?
+  priority    String?
+  sentiment   String?
+  tags        String?
+  analytics   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  card        TrelloCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  
+  @@index([cardId])
+}
+
+model SyncLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String
+  source      String
+  target      String
+  status      String
+  details     String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+}
