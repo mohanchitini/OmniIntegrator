@@ -8,7 +8,8 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${process.env.TRELLO_REDIRECT_URL}`;
+      const callbackUrl = `${req.protocol}://${req.get('host')}/trello-callback.html`;
+      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
       
       res.json({ authUrl });
     } catch (error) {
@@ -19,22 +20,14 @@ const authController = {
 
   handleTrelloCallback: async (req, res) => {
     try {
-      // Extract token from query parameters (Trello sends it in URL)
-      const trelloToken = req.query.token;
+      // Extract token from request body (sent by client-side callback handler)
+      const trelloToken = req.body.token;
       
       logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing' });
       
       if (!trelloToken) {
         logger.error('Token is missing from Trello callback');
-        return res.status(400).send(`
-          <html>
-            <body style="font-family: Arial; text-align: center; padding: 50px;">
-              <h1>❌ Authentication Failed</h1>
-              <p>Token is required but was not provided by Trello.</p>
-              <p>Please try again.</p>
-            </body>
-          </html>
-        `);
+        return res.status(400).json({ error: 'Token is required but was not provided by Trello' });
       }
 
       // Create or get user
@@ -63,28 +56,15 @@ const authController = {
 
       logger.info(`Trello authentication successful for user ${user.id}`);
       
-      // Return success HTML with token
-      return res.send(`
-        <html>
-          <body style="font-family: Arial; text-align: center; padding: 50px;">
-            <h1>✅ Trello Connected!</h1>
-            <p>Your Trello account has been successfully connected.</p>
-            <p>You can now close this window and return to the app.</p>
-            <hr>
-            <small>User ID: ${user.id}</small>
-          </body>
-        </html>
-      `);
+      return res.json({
+        success: true,
+        userId: user.id,
+        token: jwtToken,
+        message: 'Trello connected successfully'
+      });
     } catch (error) {
       logger.error('Error handling Trello callback:', error.message);
-      res.status(500).send(`
-        <html>
-          <body style="font-family: Arial; text-align: center; padding: 50px;">
-            <h1>❌ Error</h1>
-            <p>${error.message}</p>
-          </body>
-        </html>
-      `);
+      res.status(500).json({ error: error.message });
     }
   },
 
