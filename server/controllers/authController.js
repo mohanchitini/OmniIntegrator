@@ -75,7 +75,7 @@ const authController = {
   getCliqAuthUrl: (req, res) => {
     try {
       const scope = 'ZohoCliq.Webhooks.CREATE,ZohoCliq.Bots.READ,ZohoCliq.Messages.CREATE';
-      const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${scope}&client_id=${process.env.CLIQ_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${process.env.CLIQ_REDIRECT_URL}`;
+      const authUrl = `https://accounts.zoho.in/oauth/v2/auth?scope=${scope}&client_id=${process.env.CLIQ_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${process.env.CLIQ_REDIRECT_URL}`;
       
       res.json({ authUrl });
     } catch (error) {
@@ -108,7 +108,7 @@ const authController = {
         grant_type: 'authorization_code'
       });
 
-      const tokenResponse = await axios.post('https://accounts.zoho.com/oauth/v2/token', 
+      const tokenResponse = await axios.post('https://accounts.zoho.in/oauth/v2/token', 
         `code=${code}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${encodeURIComponent(redirectUrl)}&grant_type=authorization_code`,
         {
           headers: {
