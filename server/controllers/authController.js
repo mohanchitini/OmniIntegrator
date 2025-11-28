@@ -8,9 +8,12 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      // Get the base URL from Replit domain environment variable or construct it
+      let baseUrl = process.env.REPLIT_DOMAIN ? `https://${process.env.REPLIT_DOMAIN}` : `${req.protocol}://${req.get('host')}`;
+      
       const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(baseUrl)}`;
       
+      logger.info('Trello auth URL generated', { baseUrl });
       res.json({ authUrl });
     } catch (error) {
       logger.error('Error generating Trello auth URL:', error.message);
@@ -82,7 +85,11 @@ const authController = {
 
   handleCliqCallback: async (req, res) => {
     try {
-      const { code, userId } = req.body;
+      // Extract code from query params (GET) or body (POST)
+      const code = req.method === 'GET' ? req.query.code : req.body.code;
+      const userId = req.method === 'GET' ? req.query.userId : req.body.userId;
+      
+      logger.info('Cliq callback received', { code: code ? 'present' : 'missing', method: req.method });
       
       if (!code) {
         return res.status(400).json({ error: 'Code is required' });
