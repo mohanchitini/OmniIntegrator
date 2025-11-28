@@ -96,15 +96,14 @@ const authController = {
         return res.status(400).json({ error: 'Code is required' });
       }
 
-      const tokenResponse = await axios.post('https://accounts.zoho.com/oauth/v2/token', null, {
-        params: {
-          code,
-          client_id: process.env.CLIQ_CLIENT_ID,
-          client_secret: process.env.CLIQ_CLIENT_SECRET,
-          redirect_uri: process.env.CLIQ_REDIRECT_URL,
-          grant_type: 'authorization_code'
+      const tokenResponse = await axios.post('https://accounts.zoho.com/oauth/v2/token', 
+        `code=${code}&client_id=${process.env.CLIQ_CLIENT_ID}&client_secret=${process.env.CLIQ_CLIENT_SECRET}&redirect_uri=${encodeURIComponent(process.env.CLIQ_REDIRECT_URL)}&grant_type=authorization_code`,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
         }
-      });
+      );
 
       logger.info('Zoho token response received', { status: tokenResponse.status, keys: Object.keys(tokenResponse.data) });
       
