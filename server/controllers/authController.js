@@ -19,50 +19,42 @@ const authController = {
 
   handleTrelloCallback: async (req, res) => {
     try {
-      // Handle both GET (from Trello redirect) and POST requests
-      const { token, userId, state } = req.method === 'GET' ? req.query : req.body;
+      // Extract token from query parameters (Trello sends it in URL)
+      const trelloToken = req.query.token;
       
-      if (!token) {
-        return res.status(400).json({ error: 'Token is required' });
+      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing' });
+      
+      if (!trelloToken) {
+        logger.error('Token is missing from Trello callback');
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: Arial; text-align: center; padding: 50px;">
+              <h1>❌ Authentication Failed</h1>
+              <p>Token is required but was not provided by Trello.</p>
+              <p>Please try again.</p>
+            </body>
+          </html>
+        `);
       }
 
-      let user;
-      if (userId) {
-        user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) {
-          return res.status(404).json({ error: 'User not found' });
+      // Create or get user
+      let user = await prisma.user.create({
+        data: {
+          email: `user_${Date.now()}@trello-cliq.local`,
+          name: 'Trello User'
         }
-      } else {
-        user = await prisma.user.create({
-          data: {
-            email: `user_${Date.now()}@trello-cliq.local`,
-            name: 'Trello User'
-          }
-        });
-      }
-
-      const existingToken = await prisma.trelloToken.findFirst({
-        where: { userId: user.id }
       });
 
-      if (existingToken) {
-        await prisma.trelloToken.update({
-          where: { id: existingToken.id },
-          data: {
-            accessToken: token,
-            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          }
-        });
-      } else {
-        await prisma.trelloToken.create({
-          data: {
-            userId: user.id,
-            accessToken: token,
-            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          }
-        });
-      }
+      // Save Trello token
+      await prisma.trelloToken.create({
+        data: {
+          userId: user.id,
+          accessToken: trelloToken,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        }
+      });
 
+      // Generate JWT token
       const jwtToken = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
@@ -71,14 +63,28 @@ const authController = {
 
       logger.info(`Trello authentication successful for user ${user.id}`);
       
-      res.json({
-        success: true,
-        userId: user.id,
-        token: jwtToken
-      });
+      // Return success HTML with token
+      return res.send(`
+        <html>
+          <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1>✅ Trello Connected!</h1>
+            <p>Your Trello account has been successfully connected.</p>
+            <p>You can now close this window and return to the app.</p>
+            <hr>
+            <small>User ID: ${user.id}</small>
+          </body>
+        </html>
+      `);
     } catch (error) {
       logger.error('Error handling Trello callback:', error.message);
-      res.status(500).json({ error: 'Authentication failed' });
+      res.status(500).send(`
+        <html>
+          <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1>❌ Error</h1>
+            <p>${error.message}</p>
+          </body>
+        </html>
+      `);
     }
   },
 
