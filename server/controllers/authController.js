@@ -96,8 +96,20 @@ const authController = {
         return res.status(400).json({ error: 'Code is required' });
       }
 
+      // Debug: Log credentials being used (without exposing full secret)
+      const clientId = process.env.CLIQ_CLIENT_ID?.trim();
+      const clientSecret = process.env.CLIQ_CLIENT_SECRET?.trim();
+      const redirectUrl = process.env.CLIQ_REDIRECT_URL?.trim();
+      
+      logger.info('Zoho token request', { 
+        client_id: clientId ? 'present' : 'missing',
+        client_secret: clientSecret ? 'present' : 'missing', 
+        redirect_uri: redirectUrl,
+        grant_type: 'authorization_code'
+      });
+
       const tokenResponse = await axios.post('https://accounts.zoho.com/oauth/v2/token', 
-        `code=${code}&client_id=${process.env.CLIQ_CLIENT_ID}&client_secret=${process.env.CLIQ_CLIENT_SECRET}&redirect_uri=${encodeURIComponent(process.env.CLIQ_REDIRECT_URL)}&grant_type=authorization_code`,
+        `code=${code}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${encodeURIComponent(redirectUrl)}&grant_type=authorization_code`,
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
