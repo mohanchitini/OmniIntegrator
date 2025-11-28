@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      const callbackUrl = `${req.protocol}://${req.get('host')}/trello-callback.html`;
-      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(baseUrl)}`;
       
       res.json({ authUrl });
     } catch (error) {
