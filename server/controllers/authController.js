@@ -19,7 +19,8 @@ const authController = {
 
   handleTrelloCallback: async (req, res) => {
     try {
-      const { token, userId, state } = req.body;
+      // Handle both GET (from Trello redirect) and POST requests
+      const { token, userId, state } = req.method === 'GET' ? req.query : req.body;
       
       if (!token) {
         return res.status(400).json({ error: 'Token is required' });

@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 
 router.get('/trello', authController.getTrelloAuthUrl);
+router.get('/trello/callback', authController.handleTrelloCallback);
 router.post('/trello/callback', authController.handleTrelloCallback);
 
 router.get('/cliq', authController.getCliqAuthUrl);
