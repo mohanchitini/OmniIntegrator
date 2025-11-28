@@ -106,7 +106,14 @@ const authController = {
         }
       });
 
+      logger.info('Zoho token response received', { status: tokenResponse.status, keys: Object.keys(tokenResponse.data) });
+      
       const { access_token, refresh_token, expires_in } = tokenResponse.data;
+      
+      if (!access_token) {
+        logger.error('No access_token in Zoho response', { response: tokenResponse.data });
+        throw new Error('Zoho did not return an access token - check your credentials and redirect URL');
+      }
 
       let user;
       if (userId) {
