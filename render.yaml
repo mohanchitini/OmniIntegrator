@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: backend
+    runtime: node
+    startCommand: cd server && npm install && npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        scope: run
+      - key: TRELLO_CLIENT_ID
+        scope: secret
+      - key: TRELLO_CALLBACK_URL
+        scope: secret
+      - key: ZOHO_CLIQ_CLIENT_ID
+        scope: secret
+      - key: ZOHO_CLIQ_CLIENT_SECRET
+        scope: secret
+      - key: ZOHO_CLIQ_REDIRECT_URI
+        scope: secret
+      - key: JWT_SECRET
+        scope: secret
+      - key: AI_SERVICE_URL
+        value: http://localhost:8000
+      - key: AI_API_KEY
+        scope: secret
+      - key: CLIQ_WEBHOOK_TOKEN
+        scope: secret
+
+  - type: web
+    name: ai-service
+    runtime: python
+    startCommand: cd ai-service && pip install -r requirements.txt && python -m uvicorn main:app --host 0.0.0.0 --port 8000
+    plan: free
+    envVars:
+      - key: AI_API_KEY
+        scope: secret
+      - key: OPENAI_API_KEY
+        scope: secret

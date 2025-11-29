@@ -215,3 +215,62 @@ Required environment variables:
 - `AI_SERVICE_URL` - Python AI service endpoint
 - `PORT` - Server port (default: 3000)
 - `DATABASE_URL` - Database connection string
+- `CLIQ_WEBHOOK_TOKEN` - Zoho Cliq webhook token
+
+## Deployment Instructions (Render)
+
+### Prerequisites
+- GitHub account with repository containing the code
+- Render account (free tier available)
+- PostgreSQL database URL (Render PostgreSQL or external)
+- All secrets configured
+
+### Step 1: Push Code to GitHub
+```bash
+git add .
+git commit -m "Ready for production deployment"
+git push origin main
+```
+
+### Step 2: Create Services on Render
+
+**Backend Service:**
+1. Connect GitHub repository to Render
+2. Create new Web Service
+3. Select this repository
+4. Set start command: `cd server && npm install && npm start`
+5. Set environment:
+   - NODE_ENV: `production`
+   - DATABASE_URL: `postgresql://...` (set to production Neon/Render PostgreSQL)
+   - All other env vars from `.env` file
+
+**AI Microservice:**
+1. Create another Web Service for AI
+2. Set start command: `cd ai-service && pip install -r requirements.txt && python -m uvicorn main:app --host 0.0.0.0 --port 8000`
+3. Set environment:
+   - AI_API_KEY: Your OpenAI key (if using AI features)
+
+### Step 3: Database Setup
+1. Use Render PostgreSQL or Neon
+2. Get connection string: `postgresql://user:password@host:5432/database`
+3. Set `DATABASE_URL` in Render dashboard
+4. Run migrations: Render will auto-run on deployment if configured
+
+### Step 4: Update Callback URLs
+After deployment, Render provides URLs:
+- Backend: `https://your-backend-name.onrender.com`
+- AI: `https://your-ai-name.onrender.com`
+
+Update in Zoho Cliq and Trello:
+- Trello callback: `https://your-backend-name.onrender.com/trello-callback.html`
+- Cliq callback: `https://your-backend-name.onrender.com/api/auth/cliq/callback`
+
+### Step 5: Configure Webhooks
+- Zoho Cliq webhook endpoint: `https://your-backend-name.onrender.com/api/cliq/bot`
+- Trello webhook endpoint: `https://your-backend-name.onrender.com/webhook/trello`
+
+### Deployment Files Included
+- `Procfile` - Render process definitions
+- `render.yaml` - Infrastructure as code (alternative to Render dashboard)
+- `build.sh` - Build script with Prisma migrations
+- `.env.example` - Environment variable reference
