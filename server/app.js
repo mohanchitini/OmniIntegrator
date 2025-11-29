@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const { PrismaClient } = require('@prisma/client');
+const { execSync } = require('child_process');
 const logger = require('./utils/logger');
 
 const authRoutes = require('./routes/auth');
@@ -16,6 +17,18 @@ const trelloController = require('./controllers/trelloController');
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+
+// Run migrations on startup
+(async () => {
+  try {
+    logger.info('Running Prisma migrations...');
+    execSync('npx prisma migrate deploy', { stdio: 'inherit', cwd: __dirname });
+    logger.info('Migrations completed successfully');
+  } catch (error) {
+    logger.warn('Migration warning:', error.message);
+    // Continue even if migration fails, tables might already exist
+  }
+})();
 
 app.use(cors());
 app.use(bodyParser.json());

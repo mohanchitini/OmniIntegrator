@@ -4,7 +4,7 @@
   "description": "AI-Powered Trello \u21c6 Zoho Cliq Integration Backend",
   "main": "app.js",
   "scripts": {
-    "start": "bash start.sh",
+    "start": "node app.js",
     "dev": "nodemon app.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
