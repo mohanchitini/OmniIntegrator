@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const axios = require('axios');
 const CliqService = require('../services/cliqService');
 const TrelloService = require('../services/trelloService');
 const logger = require('../utils/logger');
@@ -57,16 +58,38 @@ const cliqController = {
 
   handleBotMessage: async (req, res) => {
     try {
-      const { message, user } = req.body;
+      const signature = req.headers['x-cliq-signature'];
+      const data = JSON.stringify(req.body);
 
-      logger.info(`Bot message from ${user.email}: ${message}`);
+      // Verify webhook signature
+      if (signature && !verifyZohoCliqSignature(data, signature, process.env.CLIQ_WEBHOOK_TOKEN)) {
+        logger.warn('Invalid webhook signature');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
 
-      res.json({
-        text: `Message received: ${message}`
-      });
+      const { message, user, function_name } = req.body;
+
+      logger.info(`Bot function: ${function_name}, Message: ${message}, User: ${user?.email}`);
+
+      let response = { text: 'Processing...' };
+
+      // Route to appropriate function handler
+      if (function_name === 'GREET') {
+        response = {
+          text: '👋 Hey! I\'m CliqMate, your Trello bot companion! 🤖\n\nI can help you:\n• View your Trello boards\n• Create cards from Cliq\n• Get AI-powered task insights\n• Receive real-time notifications\n\nType a message or use /trello command to get started!'
+        };
+      } else if (function_name === 'PROCESS') {
+        response = await handleBotProcess(message, user);
+      } else {
+        response = {
+          text: '🤔 I didn\'t understand that. Use /trello command to interact with your boards!'
+        };
+      }
+
+      res.json(response);
     } catch (error) {
       logger.error('Error handling bot message:', error.message);
-      res.status(500).json({ error: 'Failed to process message' });
+      res.status(500).json({ text: '❌ An error occurred. Please try again.' });
     }
   },
 
@@ -298,6 +321,38 @@ async function handleSummaryCommand(user) {
   } catch (error) {
     logger.error('Error generating summary:', error.message);
     return { text: '❌ Failed to generate summary' };
+  }
+}
+
+async function handleBotProcess(message, user) {
+  try {
+    if (!message) {
+      return {
+        text: '💬 I\'m listening! Send a message like:\n• "show boards"\n• "my tasks"\n• "help"'
+      };
+    }
+
+    const messageLower = message.toLowerCase();
+
+    // Handle different message intents
+    if (messageLower.includes('board') || messageLower.includes('show')) {
+      return await handleBoardsCommand(user);
+    } else if (messageLower.includes('task') || messageLower.includes('my')) {
+      return await handleMyTasksCommand(user);
+    } else if (messageLower.includes('connect') || messageLower.includes('auth')) {
+      return await handleConnectCommand(user);
+    } else if (messageLower.includes('help') || messageLower.includes('?')) {
+      return {
+        text: '🆘 **Available Commands:**\n\n• "show boards" - View your Trello boards\n• "my tasks" - See your active tasks\n• "connect" - Link your Trello account\n• Or just chat naturally about your tasks!'
+      };
+    } else {
+      return {
+        text: `💭 You said: "${message}"\n\n📝 Need help? Try:\n• "show boards"\n• "my tasks"\n• "help"`
+      };
+    }
+  } catch (error) {
+    logger.error('Error processing bot message:', error.message);
+    return { text: '❌ Sorry, I couldn\'t process that. Try again!' };
   }
 }
 
