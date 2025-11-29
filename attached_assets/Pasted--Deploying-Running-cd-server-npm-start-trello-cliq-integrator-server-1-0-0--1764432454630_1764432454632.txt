@@ -1,0 +1,62 @@
+     ==> Deploying...
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Your service is live 🎉
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> 
+     ==> Available at your primary URL https://trello-cliq-backend.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> Detected service running on port 3000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Deploying...
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Available at your primary URL https://trello-cliq-backend.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> Detected service running on port 3000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+     ==> Deploying...
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Your service is live 🎉
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> 
+     ==> Available at your primary URL https://trello-cliq-backend.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> Deploying...
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Your service is live 🎉
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> 
+     ==> Available at your primary URL https://trello-cliq-backend.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> Detected service running on port 3000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+     ==> Deploying...
+==> Running '	cd server && npm start'
+> trello-cliq-integrator-server@1.0.0 start
+> node app.js
+     ==> Your service is live 🎉
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> 
+     ==> Available at your primary URL https://trello-cliq-backend.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+     ==> Detected service running on port 3000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
