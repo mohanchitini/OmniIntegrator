@@ -95,22 +95,7 @@ async function handleConnectCommand(user) {
   const authUrl = `${process.env.TRELLO_REDIRECT_URL}?user_id=${user.id}`;
   
   return {
-    text: '🔗 **Connect to Trello**',
-    card: {
-      title: 'Trello Authentication',
-      theme: 'modern-inline',
-      content: [{
-        type: 'text',
-        text: 'Click the button below to connect your Trello account'
-      }, {
-        type: 'buttons',
-        buttons: [{
-          label: 'Connect Trello',
-          type: 'open.url',
-          url: authUrl
-        }]
-      }]
-    }
+    text: `🔗 **Connect to Trello**\n\nClick here to authorize: [Connect Trello](${authUrl})`
   };
 }
 
