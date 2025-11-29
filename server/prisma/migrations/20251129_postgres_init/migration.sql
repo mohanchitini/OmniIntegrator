@@ -1,4 +1,4 @@
--- CreateTable
+-- CreateTable User
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable TrelloToken
 CREATE TABLE "TrelloToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE "TrelloToken" (
     CONSTRAINT "TrelloToken_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable CliqToken
 CREATE TABLE "CliqToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE "CliqToken" (
     CONSTRAINT "CliqToken_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable TrelloBoard
 CREATE TABLE "TrelloBoard" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE "TrelloBoard" (
     CONSTRAINT "TrelloBoard_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable TrelloList
 CREATE TABLE "TrelloList" (
     "id" TEXT NOT NULL,
     "boardId" TEXT NOT NULL,
@@ -63,51 +63,47 @@ CREATE TABLE "TrelloList" (
     CONSTRAINT "TrelloList_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable TrelloCard
 CREATE TABLE "TrelloCard" (
     "id" TEXT NOT NULL,
     "listId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "dueDate" TIMESTAMP(3),
-    "labels" TEXT,
-    "members" TEXT,
     "position" DOUBLE PRECISION NOT NULL,
-    "closed" BOOLEAN NOT NULL DEFAULT false,
-    "url" TEXT,
+    "labels" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "TrelloCard_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "AIInsights" (
-    "id" TEXT NOT NULL,
-    "cardId" TEXT NOT NULL,
-    "summary" TEXT,
-    "priority" TEXT,
-    "sentiment" TEXT,
-    "tags" TEXT,
-    "analytics" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "AIInsights_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
+-- CreateTable SyncLog
 CREATE TABLE "SyncLog" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "action" TEXT NOT NULL,
-    "source" TEXT NOT NULL,
-    "target" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-    "details" TEXT,
+    "boardId" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "error" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "SyncLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable AIInsight
+CREATE TABLE "AIInsight" (
+    "id" TEXT NOT NULL,
+    "cardId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "summary" TEXT,
+    "priority" TEXT,
+    "tasks" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AIInsight_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -116,14 +112,8 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 -- CreateIndex
 CREATE INDEX "TrelloToken_userId_idx" ON "TrelloToken"("userId");
 
--- AddForeignKey
-ALTER TABLE "TrelloToken" ADD CONSTRAINT "TrelloToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
 -- CreateIndex
 CREATE INDEX "CliqToken_userId_idx" ON "CliqToken"("userId");
-
--- AddForeignKey
-ALTER TABLE "CliqToken" ADD CONSTRAINT "CliqToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- CreateIndex
 CREATE INDEX "TrelloBoard_userId_idx" ON "TrelloBoard"("userId");
@@ -131,26 +121,38 @@ CREATE INDEX "TrelloBoard_userId_idx" ON "TrelloBoard"("userId");
 -- CreateIndex
 CREATE INDEX "TrelloList_boardId_idx" ON "TrelloList"("boardId");
 
--- AddForeignKey
-ALTER TABLE "TrelloList" ADD CONSTRAINT "TrelloList_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "TrelloBoard"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
 -- CreateIndex
 CREATE INDEX "TrelloCard_listId_idx" ON "TrelloCard"("listId");
-
--- AddForeignKey
-ALTER TABLE "TrelloCard" ADD CONSTRAINT "TrelloCard_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TrelloList"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- CreateIndex
-CREATE INDEX "AIInsights_cardId_idx" ON "AIInsights"("cardId");
-
--- AddForeignKey
-ALTER TABLE "AIInsights" ADD CONSTRAINT "AIInsights_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "TrelloCard"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- CreateIndex
 CREATE INDEX "SyncLog_userId_idx" ON "SyncLog"("userId");
 
 -- CreateIndex
-CREATE INDEX "SyncLog_createdAt_idx" ON "SyncLog"("createdAt");
+CREATE INDEX "AIInsight_cardId_idx" ON "AIInsight"("cardId");
+
+-- CreateIndex
+CREATE INDEX "AIInsight_userId_idx" ON "AIInsight"("userId");
+
+-- AddForeignKey
+ALTER TABLE "TrelloToken" ADD CONSTRAINT "TrelloToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CliqToken" ADD CONSTRAINT "CliqToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TrelloBoard" ADD CONSTRAINT "TrelloBoard_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TrelloList" ADD CONSTRAINT "TrelloList_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "TrelloBoard"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TrelloCard" ADD CONSTRAINT "TrelloCard_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TrelloList"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SyncLog" ADD CONSTRAINT "SyncLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AIInsight" ADD CONSTRAINT "AIInsight_cardId_fkey" FOREIGN KEY ("cardId") REFERENCES "TrelloCard"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AIInsight" ADD CONSTRAINT "AIInsight_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
