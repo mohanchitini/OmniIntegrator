@@ -232,7 +232,8 @@ async function handleSummaryCommand(user) {
       return { text: '❌ Please connect your Trello account first' };
     }
 
-    const totalCards = await prisma.trelloCard.count({
+    // Get all user's cards for analytics
+    const cards = await prisma.trelloCard.findMany({
       where: {
         closed: false,
         list: {
@@ -240,38 +241,54 @@ async function handleSummaryCommand(user) {
             userId: userRecord.id
           }
         }
-      }
-    });
-
-    const urgentCards = await prisma.aIInsights.count({
-      where: {
-        priority: 'high',
-        card: {
-          closed: false
-        }
-      }
-    });
-
-    const overdueCards = await prisma.trelloCard.count({
-      where: {
-        closed: false,
-        dueDate: {
-          lt: new Date()
-        },
+      },
+      include: {
         list: {
-          board: {
-            userId: userRecord.id
+          include: {
+            board: true
           }
         }
       }
     });
 
-    return {
-      text: `📊 **Trello Summary**\n\n` +
-            `📋 Total Active Cards: ${totalCards}\n` +
-            `🔴 Urgent Tasks: ${urgentCards}\n` +
-            `⏰ Overdue: ${overdueCards}`
-    };
+    // Prepare cards data for AI analytics
+    const cardsData = cards.map(card => ({
+      name: card.name,
+      description: card.description || '',
+      closed: card.closed,
+      dueDate: card.dueDate,
+      id: card.id
+    }));
+
+    // Call AI microservice for analytics
+    let aiAnalytics = null;
+    try {
+      const aiResponse = await axios.post(
+        'http://localhost:8000/analytics',
+        { cards: cardsData },
+        { timeout: 5000 }
+      );
+      aiAnalytics = aiResponse.data.analytics;
+    } catch (aiError) {
+      logger.warn('AI analytics not available:', aiError.message);
+    }
+
+    // Build summary response
+    let summaryText = `📊 **Trello Summary**\n\n`;
+    summaryText += `📋 Total Active Cards: ${cards.length}\n`;
+    
+    if (aiAnalytics) {
+      summaryText += `✅ Completed: ${aiAnalytics.completed}\n`;
+      summaryText += `🔴 High Priority: ${aiAnalytics.priority_distribution.high}\n`;
+      summaryText += `🟡 Medium Priority: ${aiAnalytics.priority_distribution.medium}\n`;
+      summaryText += `🟢 Low Priority: ${aiAnalytics.priority_distribution.low}\n`;
+      summaryText += `📈 Productivity Score: ${aiAnalytics.productivity_score}%\n`;
+      summaryText += `⏳ Completion Rate: ${aiAnalytics.completion_rate}%`;
+    } else {
+      summaryText += `⚠️ AI analytics unavailable (running in rule-based mode)`;
+    }
+
+    return { text: summaryText };
   } catch (error) {
     logger.error('Error generating summary:', error.message);
     return { text: '❌ Failed to generate summary' };
