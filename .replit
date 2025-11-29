@@ -67,10 +67,6 @@ externalPort = 80
 localPort = 8000
 externalPort = 8000
 
-[[ports]]
-localPort = 44275
-externalPort = 3001
-
 [deployment]
 deploymentTarget = "vm"
 run = ["bash", "-c", "cd server && npm start & cd ai-service && python main.py"]
