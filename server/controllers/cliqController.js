@@ -92,7 +92,9 @@ const cliqController = {
 };
 
 async function handleConnectCommand(user) {
-  const authUrl = `${process.env.TRELLO_REDIRECT_URL}?user_id=${user.id}`;
+  // Construct proper Trello OAuth URL
+  const callbackUrl = `https://5a8412b0-a4de-4518-bdde-ab106d3692bb-00-3fl13zlylqo78.janeway.replit.dev/trello-callback.html`;
+  const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
   
   return {
     text: `🔗 **Connect to Trello**\n\nClick here to authorize: [Connect Trello](${authUrl})`

@@ -11,8 +11,9 @@ const authController = {
       // Always use HTTPS for Replit
       const host = req.get('host');
       const baseUrl = `https://${host}`;
+      const callbackUrl = `${baseUrl}/trello-callback.html`;
       
-      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(baseUrl)}`;
+      const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
       
       logger.info('Trello auth URL generated', { baseUrl });
       res.json({ authUrl });
