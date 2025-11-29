@@ -131,10 +131,8 @@
                     localStorage.setItem('userId', data.userId);
                 }
 
-                // Auto-close after 3 seconds
-                setTimeout(() => {
-                    window.close();
-                }, 3000);
+                // Don't auto-close - let user manually close or they can return to app
+                // Removed auto-close so user can verify successful connection
             } catch (error) {
                 console.error('Error:', error);
                 document.querySelector('.loading').style.display = 'none';
