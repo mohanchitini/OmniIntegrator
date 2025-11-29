@@ -11,7 +11,7 @@ NODE_ENV = "development"
 LOG_LEVEL = "info"
 AI_SERVICE_URL = "http://localhost:8000"
 JWT_SECRET = "your_jwt_secret_change_in_production"
-TRELLO_REDIRECT_URL = "https://5a8412b0-a4de-4518-bdde-ab106d3692bb-00-3fl13zlylqo78.janeway.replit.dev/api/auth/trello/callback"
+TRELLO_REDIRECT_URL = "https://trello-cliq-backend.onrender.com/api/auth/trello/callback"
 CLIQ_REDIRECT_URL = "https://5a8412b0-a4de-4518-bdde-ab106d3692bb-00-3fl13zlylqo78.janeway.replit.dev/api/auth/cliq/callback"
 CLIQ_WEBHOOK_TOKEN = "1001.c0509c4b30faf93e89d2cbd4f`WEBHOOK_TOKEN`"
 
@@ -66,6 +66,10 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[[ports]]
+localPort = 43781
+externalPort = 3001
 
 [deployment]
 deploymentTarget = "vm"
