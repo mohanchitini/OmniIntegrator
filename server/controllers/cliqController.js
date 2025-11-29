@@ -13,39 +13,45 @@ const cliqController = {
 
       logger.info(`Received Cliq command: ${command}`);
 
-      let response = { text: 'Command received' };
+      let response = { text: 'Command received', isPublic: true };
 
       switch (command) {
         case 'trello_connect':
           response = await handleConnectCommand(user);
+          response.isPublic = true;
           break;
         
         case 'trello_boards':
           response = await handleBoardsCommand(user);
+          response.isPublic = true;
           break;
         
         case 'trello_create_card':
           response = await handleCreateCardCommand(args, user);
+          response.isPublic = true;
           break;
         
         case 'trello_mytasks':
           response = await handleMyTasksCommand(user);
+          response.isPublic = true;
           break;
         
         case 'trello_summary':
           response = await handleSummaryCommand(user);
+          response.isPublic = true;
           break;
         
         default:
           response = {
-            text: '❌ Unknown command. Available commands:\n• /trello connect\n• /trello boards\n• /trello create_card\n• /trello mytasks\n• /trello summary'
+            text: '❌ Unknown command. Available commands:\n• /trello connect\n• /trello boards\n• /trello create_card\n• /trello mytasks\n• /trello summary',
+            isPublic: true
           };
       }
 
       res.json(response);
     } catch (error) {
       logger.error('Error handling Cliq command:', error.message);
-      res.status(500).json({ text: '❌ An error occurred processing your command' });
+      res.status(500).json({ text: '❌ An error occurred processing your command', isPublic: true });
     }
   },
 
