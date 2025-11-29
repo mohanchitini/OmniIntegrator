@@ -24,7 +24,7 @@
         }
         
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             text-align: center;
         }
         
@@ -37,6 +37,62 @@
         .header p {
             color: #7f8c8d;
             font-size: 14px;
+        }
+        
+        .controls {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .refresh-btn, .create-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover, .create-btn:hover {
+            background: #764ba2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
         
         .boards-grid {
@@ -145,6 +201,7 @@
             align-items: center;
             font-size: 11px;
             color: #7f8c8d;
+            margin-bottom: 8px;
         }
         
         .priority-badge {
@@ -167,6 +224,63 @@
         .priority-low {
             background: #dfe6e9;
             color: #2d3436;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        .card-action-btn {
+            flex: 1;
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .card-action-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .task-creation-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .task-creation-form h3 {
+            margin-bottom: 16px;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .form-group input, .form-group select {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         .loading, .error {
@@ -205,38 +319,95 @@
             margin-bottom: 16px;
         }
         
-        .refresh-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+        .ai-summary-popup, .ai-tasks-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .ai-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .ai-popup-overlay.active {
+            display: block;
+        }
+        
+        .ai-summary-popup.active, .ai-tasks-popup.active {
+            display: block;
+        }
+        
+        .ai-popup-close {
+            float: right;
+            font-size: 24px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
+            color: #7f8c8d;
         }
         
-        .refresh-btn:hover {
-            background: #764ba2;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        .refresh-btn:active {
-            transform: translateY(0);
+        .ai-popup-close:hover {
+            color: #2c3e50;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 Trello Kanban Board</h1>
-            <p>Real-time view of your Trello boards and tasks</p>
+            <h1>📋 Trello Kanban Dashboard</h1>
+            <p>Manage your Trello boards with AI insights</p>
+        </div>
+        
+        <!-- CONTROLS & FILTERS -->
+        <div class="controls">
+            <div class="control-group">
+                <label>Board:</label>
+                <select id="boardSelect" onchange="onBoardChange()">
+                    <option value="">All Boards</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>List:</label>
+                <select id="listSelect" onchange="onListChange()">
+                    <option value="">All Lists</option>
+                </select>
+            </div>
             <button class="refresh-btn" onclick="loadBoards()">🔄 Refresh</button>
         </div>
         
+        <!-- TASK CREATION FORM -->
+        <div class="task-creation-form">
+            <h3>➕ Create New Task</h3>
+            <div class="form-group">
+                <select id="boardInput" required>
+                    <option value="">Select Board</option>
+                </select>
+                <select id="listInput" required>
+                    <option value="">Select List</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="cardNameInput" placeholder="Task Name" required>
+                <button class="create-btn" onclick="createNewTask()">Create Task</button>
+            </div>
+        </div>
+        
+        <!-- KANBAN BOARD -->
         <div id="content">
             <div class="loading">
                 <div class="spinner"></div>
@@ -245,8 +416,22 @@
         </div>
     </div>
 
+    <!-- AI POPUPS -->
+    <div class="ai-popup-overlay" id="popupOverlay" onclick="closePopups()"></div>
+    <div class="ai-summary-popup" id="summaryPopup">
+        <span class="ai-popup-close" onclick="closePopups()">&times;</span>
+        <h3>✨ AI Summary</h3>
+        <p id="summaryContent">Loading...</p>
+    </div>
+    <div class="ai-tasks-popup" id="tasksPopup">
+        <span class="ai-popup-close" onclick="closePopups()">&times;</span>
+        <h3>📋 Extracted Subtasks</h3>
+        <div id="tasksContent">Loading...</div>
+    </div>
+
     <script>
-        // Get userId from URL or localStorage
+        let allBoards = [];
+
         function getUserId() {
             const params = new URLSearchParams(window.location.search);
             const userId = params.get('userId') || localStorage.getItem('userId');
@@ -273,7 +458,9 @@
                 if (!response.ok) throw new Error('Failed to fetch boards');
                 
                 const data = await response.json();
-                renderBoards(data.boards || []);
+                allBoards = data.boards || [];
+                populateSelects();
+                renderBoards(allBoards);
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('content').innerHTML = `
@@ -288,8 +475,49 @@
             }
         }
 
+        function populateSelects() {
+            const boardSelect = document.getElementById('boardSelect');
+            const boardInput = document.getElementById('boardInput');
+            
+            boardSelect.innerHTML = '<option value="">All Boards</option>';
+            boardInput.innerHTML = '<option value="">Select Board</option>';
+            
+            allBoards.forEach(board => {
+                boardSelect.innerHTML += `<option value="${board.id}">${board.name}</option>`;
+                boardInput.innerHTML += `<option value="${board.id}">${board.name}</option>`;
+            });
+        }
+
+        function onBoardChange() {
+            const selectedBoardId = document.getElementById('boardSelect').value;
+            const listSelect = document.getElementById('listSelect');
+            listSelect.innerHTML = '<option value="">All Lists</option>';
+            
+            if (selectedBoardId) {
+                const board = allBoards.find(b => b.id === selectedBoardId);
+                if (board) {
+                    board.lists.forEach(list => {
+                        listSelect.innerHTML += `<option value="${list.id}">${list.name}</option>`;
+                    });
+                }
+            }
+            renderBoards(allBoards);
+        }
+
+        function onListChange() {
+            renderBoards(allBoards);
+        }
+
         function renderBoards(boards) {
-            if (!boards || boards.length === 0) {
+            const selectedBoardId = document.getElementById('boardSelect').value;
+            const selectedListId = document.getElementById('listSelect').value;
+            
+            let filteredBoards = boards;
+            if (selectedBoardId) {
+                filteredBoards = boards.filter(b => b.id === selectedBoardId);
+            }
+
+            if (!filteredBoards || filteredBoards.length === 0) {
                 document.getElementById('content').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
@@ -302,7 +530,7 @@
 
             let html = '<div class="boards-grid">';
             
-            boards.forEach(board => {
+            filteredBoards.forEach(board => {
                 const totalCards = board.lists.reduce((sum, list) => sum + list.cards.length, 0);
                 const highPriorityCards = board.lists.reduce((sum, list) => 
                     sum + list.cards.filter(card => card.aiInsights?.[0]?.priority === 'high').length, 0
@@ -321,6 +549,8 @@
                 `;
 
                 board.lists.forEach(list => {
+                    if (selectedListId && list.id !== selectedListId) return;
+                    
                     html += `
                         <div class="list">
                             <div class="list-header">${list.name} (${list.cards.length})</div>
@@ -338,6 +568,10 @@
                                     <span>${priorityIcon}</span>
                                     <span class="priority-badge priority-${priority}">${priority}</span>
                                     ${card.dueDate ? `<span>📅 ${new Date(card.dueDate).toLocaleDateString()}</span>` : ''}
+                                </div>
+                                <div class="card-actions">
+                                    <button class="card-action-btn" onclick="getAISummary('${card.name}')">📝 Summarize</button>
+                                    <button class="card-action-btn" onclick="getAISubtasks('${card.name}')">✓ Subtasks</button>
                                 </div>
                             </div>
                         `;
@@ -357,6 +591,86 @@
 
             html += '</div>';
             document.getElementById('content').innerHTML = html;
+        }
+
+        async function createNewTask() {
+            const boardId = document.getElementById('boardInput').value;
+            const listId = document.getElementById('listInput').value;
+            const cardName = document.getElementById('cardNameInput').value;
+            
+            if (!boardId || !listId || !cardName) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/cliq/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        command: 'trello_create_card',
+                        arguments: [cardName, boardId, listId],
+                        user: { id: getUserId() }
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ Task created successfully!');
+                    document.getElementById('cardNameInput').value = '';
+                    loadBoards();
+                } else {
+                    alert('❌ Failed to create task');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function getAISummary(cardName) {
+            try {
+                const response = await fetch('/api/ai/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: cardName })
+                });
+
+                const data = await response.json();
+                document.getElementById('summaryContent').innerText = data.summary || 'No summary available';
+                document.getElementById('popupOverlay').classList.add('active');
+                document.getElementById('summaryPopup').classList.add('active');
+            } catch (error) {
+                alert('Error getting summary: ' + error.message);
+            }
+        }
+
+        async function getAISubtasks(cardName) {
+            try {
+                const response = await fetch('/api/ai/extract_tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: cardName })
+                });
+
+                const data = await response.json();
+                const tasks = data.tasks || [];
+                let tasksHtml = '<ul>';
+                tasks.forEach(task => {
+                    tasksHtml += `<li>✓ ${task}</li>`;
+                });
+                tasksHtml += '</ul>';
+                
+                document.getElementById('tasksContent').innerHTML = tasksHtml || 'No subtasks extracted';
+                document.getElementById('popupOverlay').classList.add('active');
+                document.getElementById('tasksPopup').classList.add('active');
+            } catch (error) {
+                alert('Error extracting subtasks: ' + error.message);
+            }
+        }
+
+        function closePopups() {
+            document.getElementById('popupOverlay').classList.remove('active');
+            document.getElementById('summaryPopup').classList.remove('active');
+            document.getElementById('tasksPopup').classList.remove('active');
         }
 
         // Load boards on page load and refresh every 30 seconds
