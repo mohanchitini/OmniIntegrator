@@ -4,8 +4,6 @@ node_modules/
 dev.db
 *.db-journal
 
-server/prisma/migrations
-
 __pycache__/
 *.py[cod]
 *$py.class
