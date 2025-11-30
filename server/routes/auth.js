@@ -4,6 +4,7 @@ const authController = require('../controllers/authController');
 
 // Direct token endpoint (bypasses OAuth callback complexity)
 router.post('/trello/token', authController.handleTrelloToken);
+router.post('/trello/sync', authController.syncTrelloData);
 
 router.get('/trello', authController.getTrelloAuthUrl);
 router.post('/trello/callback', authController.handleTrelloCallback);

@@ -227,6 +227,100 @@ const authController = {
     } catch (error) {
       res.status(401).json({ error: 'Invalid token' });
     }
+  },
+
+  syncTrelloData: async (req, res) => {
+    try {
+      const TrelloService = require('../services/trelloService');
+      
+      // Get the most recent token
+      const tokenRecord = await prisma.trelloToken.findFirst({
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (!tokenRecord) {
+        return res.status(400).json({ error: 'No Trello token found. Please save token first.' });
+      }
+
+      const trelloService = new TrelloService(tokenRecord.accessToken);
+      
+      // Fetch all boards
+      const boards = await trelloService.getBoards();
+      logger.info(`Syncing ${boards.length} boards`);
+
+      let totalCards = 0;
+
+      for (const board of boards) {
+        // Create/update board in database
+        let dbBoard = await prisma.trelloBoard.findUnique({
+          where: { id: board.id }
+        });
+
+        if (!dbBoard) {
+          dbBoard = await prisma.trelloBoard.create({
+            data: {
+              id: board.id,
+              name: board.name,
+              userId: tokenRecord.userId
+            }
+          });
+        }
+
+        // Fetch and sync lists
+        const lists = await trelloService.getLists(board.id);
+
+        for (const list of lists) {
+          let dbList = await prisma.trelloList.findUnique({
+            where: { id: list.id }
+          });
+
+          if (!dbList) {
+            dbList = await prisma.trelloList.create({
+              data: {
+                id: list.id,
+                name: list.name,
+                boardId: board.id
+              }
+            });
+          }
+
+          // Fetch and sync cards
+          const cards = await trelloService.getCards(list.id);
+          totalCards += cards.length;
+
+          for (const card of cards) {
+            await prisma.trelloCard.upsert({
+              where: { id: card.id },
+              create: {
+                id: card.id,
+                name: card.name,
+                description: card.desc || '',
+                listId: list.id,
+                closed: card.closed,
+                dueDate: card.due ? new Date(card.due) : null
+              },
+              update: {
+                name: card.name,
+                description: card.desc || '',
+                closed: card.closed,
+                dueDate: card.due ? new Date(card.due) : null
+              }
+            });
+          }
+        }
+      }
+
+      logger.info(`✅ Sync complete: ${boards.length} boards, ${totalCards} cards`);
+      res.json({ 
+        success: true, 
+        boards: boards.length, 
+        cards: totalCards,
+        message: `Synced ${boards.length} boards and ${totalCards} cards`
+      });
+    } catch (error) {
+      logger.error('Sync error:', error.message);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
