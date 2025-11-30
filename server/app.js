@@ -73,6 +73,30 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.get('/debug/database', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: { trelloTokens: true, cliqTokens: true }
+    });
+    res.json({
+      users: users.map(u => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        trelloTokenCount: u.trelloTokens.length,
+        cliqTokenCount: u.cliqTokens.length,
+        trelloTokens: u.trelloTokens.map(t => ({
+          id: t.id,
+          hasToken: !!t.accessToken,
+          createdAt: t.createdAt
+        }))
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/trello', trelloRoutes);
 app.use('/api/cliq', cliqRoutes);
