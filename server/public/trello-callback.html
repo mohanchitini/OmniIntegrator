@@ -107,7 +107,11 @@
                 }
 
                 // Send token to backend
-                const backendUrl = 'https://trello-cliq-backend.onrender.com';
+                // Use local backend during development, Render in production
+                const isLocal = window.location.hostname !== 'trello-cliq-backend.onrender.com';
+                const backendUrl = isLocal ? window.location.origin : 'https://trello-cliq-backend.onrender.com';
+                console.log('Using backend:', backendUrl);
+                
                 const response = await fetch(`${backendUrl}/api/auth/trello/callback`, {
                     method: 'POST',
                     headers: {

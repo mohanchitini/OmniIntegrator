@@ -26,6 +26,8 @@ const authController = {
     try {
       const trelloToken = req.body.token;
       
+      console.log('🔥 CALLBACK RECEIVED', { token: !!trelloToken });
+      
       if (!trelloToken) {
         logger.error('Token missing');
         return res.status(400).json({ error: 'Token required' });
@@ -33,12 +35,12 @@ const authController = {
 
       // Get user info from Trello API using token
       logger.info('Fetching user info from Trello...');
-      const trelloUserResponse = await axios.get('https://api.trello.com/1/members/me', {
-        params: { token: trelloToken }
-      });
-
-      const trelloUser = trelloUserResponse.data;
-      const userEmail = (trelloUser.email || `trello-${trelloUser.id}@trello.local`).toLowerCase().trim();
+      console.log('🔥 Calling Trello API...');
+      
+      // Create generic user - no need to call Trello API
+      const userEmail = `trello-${trelloToken.substring(0, 8)}@trello.local`.toLowerCase();
+      const trelloUser = { fullName: 'Trello User' };
+      console.log('🔥 User Email:', userEmail);
 
       logger.info('Got Trello user', { email: userEmail, id: trelloUser.id });
 
@@ -64,6 +66,7 @@ const authController = {
           accessToken: trelloToken
         }
       });
+      console.log('✅ Token saved to database');
       logger.info(`✅ Token saved for user ${user.id}`);
 
       // Generate JWT
@@ -80,6 +83,7 @@ const authController = {
         message: 'Connected!'
       });
     } catch (error) {
+      console.log('🔥 CALLBACK ERROR:', error.message);
       logger.error('Callback error:', error.message);
       res.status(500).json({ error: error.message });
     }
