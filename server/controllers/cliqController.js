@@ -254,7 +254,7 @@ async function handleMyTasksCommand(user) {
     });
 
     if (cards.length === 0) {
-      return { text: '📭 No cards found in database. Try running `/sync` first to fetch your cards from Trello.' };
+      return { text: '📭 No cards synced yet. Your Trello cards will appear here once synchronized!' };
     }
 
     const tasksList = cards.map(card => {
