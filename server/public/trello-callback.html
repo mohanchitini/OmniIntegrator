@@ -83,7 +83,7 @@
             <div class="icon">✅</div>
             <h1>Trello Connected!</h1>
             <p>Your Trello account has been successfully connected.</p>
-            <p>You can now close this window and return to the app.</p>
+            <p>You can now close this window and return to Zoho Cliq.</p>
         </div>
         
         <div class="error">
@@ -106,10 +106,6 @@
                     throw new Error('No token received from Trello');
                 }
 
-                // Extract email from query parameters
-                const queryParams = new URLSearchParams(window.location.search);
-                const email = queryParams.get('email');
-
                 // Send token to backend
                 const backendUrl = 'https://trello-cliq-backend.onrender.com';
                 const response = await fetch(`${backendUrl}/api/auth/trello/callback`, {
@@ -117,7 +113,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ token, email })
+                    body: JSON.stringify({ token })
                 });
 
                 const data = await response.json();
@@ -130,14 +126,11 @@
                 document.querySelector('.loading').style.display = 'none';
                 document.querySelector('.success').style.display = 'block';
                 
-                // Store JWT token in localStorage for future API calls
+                // Store JWT token in localStorage
                 if (data.token) {
                     localStorage.setItem('jwtToken', data.token);
                     localStorage.setItem('userId', data.userId);
                 }
-
-                // Don't auto-close - let user manually close or they can return to app
-                // Removed auto-close so user can verify successful connection
             } catch (error) {
                 console.error('Error:', error);
                 document.querySelector('.loading').style.display = 'none';

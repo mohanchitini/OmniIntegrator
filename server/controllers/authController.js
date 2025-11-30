@@ -88,8 +88,11 @@ const authController = {
   getCliqAuthUrl: (req, res) => {
     try {
       const scope = 'ZohoCliq.Webhooks.CREATE,ZohoCliq.Bots.READ,ZohoCliq.Messages.CREATE';
-      const authUrl = `https://accounts.zoho.in/oauth/v2/auth?scope=${scope}&client_id=${process.env.CLIQ_CLIENT_ID}&response_type=code&access_type=offline&redirect_uri=${process.env.CLIQ_REDIRECT_URL}`;
-      
+      const redirectUri = `${process.env.ZOHO_CLIQ_REDIRECT_URI}`;
+
+      const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${process.env.ZOHO_CLIQ_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${Date.now()}`;
+
+      logger.info('Cliq auth URL generated');
       res.json({ authUrl });
     } catch (error) {
       logger.error('Error generating Cliq auth URL:', error.message);
@@ -99,116 +102,93 @@ const authController = {
 
   handleCliqCallback: async (req, res) => {
     try {
-      // Extract code from query params (GET) or body (POST)
-      const code = req.method === 'GET' ? req.query.code : req.body.code;
-      const userId = req.method === 'GET' ? req.query.userId : req.body.userId;
-      
-      logger.info('Cliq callback received', { code: code ? 'present' : 'missing', method: req.method });
+      const code = req.query.code || req.body.code;
       
       if (!code) {
-        return res.status(400).json({ error: 'Code is required' });
+        return res.status(400).json({ error: 'Authorization code is required' });
       }
 
-      // Debug: Log credentials being used (without exposing full secret)
-      const clientId = process.env.CLIQ_CLIENT_ID?.trim();
-      const clientSecret = process.env.CLIQ_CLIENT_SECRET?.trim();
-      const redirectUrl = process.env.CLIQ_REDIRECT_URL?.trim();
-      
-      logger.info('Zoho token request', { 
-        client_id: clientId ? 'present' : 'missing',
-        client_secret: clientSecret ? 'present' : 'missing', 
-        redirect_uri: redirectUrl,
-        grant_type: 'authorization_code'
+      logger.info('Cliq callback received with code');
+
+      // Exchange code for access token
+      const tokenResponse = await axios.post('https://accounts.zoho.com/oauth/v2/token', null, {
+        params: {
+          grant_type: 'authorization_code',
+          client_id: process.env.ZOHO_CLIQ_CLIENT_ID,
+          client_secret: process.env.ZOHO_CLIQ_CLIENT_SECRET,
+          redirect_uri: process.env.ZOHO_CLIQ_REDIRECT_URI,
+          code: code
+        }
       });
 
-      const tokenResponse = await axios.post('https://accounts.zoho.in/oauth/v2/token', 
-        `code=${code}&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${encodeURIComponent(redirectUrl)}&grant_type=authorization_code`,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-      );
+      const accessToken = tokenResponse.data.access_token;
+      logger.info('Cliq access token obtained');
 
-      logger.info('Zoho token response received', { status: tokenResponse.status, keys: Object.keys(tokenResponse.data) });
-      
-      const { access_token, refresh_token, expires_in } = tokenResponse.data;
-      
-      if (!access_token) {
-        logger.error('No access_token in Zoho response', { response: tokenResponse.data });
-        throw new Error('Zoho did not return an access token - check your credentials and redirect URL');
-      }
+      // Get user info
+      const userResponse = await axios.get('https://cliq.zoho.com/api/v2/users/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
 
-      let user;
-      if (userId) {
-        user = await prisma.user.findUnique({ where: { id: userId } });
-      } else {
+      const cliqUser = userResponse.data.data;
+      const userEmail = (cliqUser.email || `cliq-${cliqUser.id}@cliq.local`).toLowerCase().trim();
+
+      logger.info('Got Cliq user info', { email: userEmail });
+
+      // Find or create user
+      let user = await prisma.user.findFirst({
+        where: { email: userEmail }
+      });
+
+      if (!user) {
         user = await prisma.user.create({
           data: {
-            email: `user_${Date.now()}@trello-cliq.local`,
-            name: 'Cliq User'
+            email: userEmail,
+            name: cliqUser.name || 'Cliq User'
           }
         });
+        logger.info(`Created user: ${user.id}`);
       }
 
-      // Calculate expiration date (default to 24 hours if not provided)
-      const expiresInSeconds = expires_in || 86400;
-      const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
-
+      // Save Cliq token
       await prisma.cliqToken.create({
         data: {
           userId: user.id,
-          accessToken: access_token,
-          refreshToken: refresh_token,
-          expiresAt
+          accessToken: accessToken
         }
       });
 
+      logger.info(`Cliq token saved for user ${user.id}`);
+
+      // Generate JWT
       const jwtToken = jwt.sign(
-        { userId: user.id },
+        { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
       );
 
-      logger.info(`Cliq authentication successful for user ${user.id}`);
-      
       res.json({
         success: true,
         userId: user.id,
-        token: jwtToken
+        token: jwtToken,
+        message: 'Cliq connected successfully'
       });
     } catch (error) {
       logger.error('Error handling Cliq callback:', error.message);
-      res.status(500).json({ error: 'Authentication failed' });
+      res.status(500).json({ error: error.message });
     }
   },
 
-  verifyToken: async (req, res) => {
+  verifyToken: (req, res) => {
     try {
-      const authHeader = req.headers.authorization;
+      const token = req.headers.authorization?.split(' ')[1];
       
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'No token provided' });
+      if (!token) {
+        return res.status(401).json({ error: 'Token required' });
       }
 
-      const token = authHeader.substring(7);
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.userId }
-      });
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      res.json({
-        valid: true,
-        userId: user.id,
-        email: user.email
-      });
+      res.json({ valid: true, userId: decoded.userId });
     } catch (error) {
-      logger.error('Error verifying token:', error.message);
       res.status(401).json({ error: 'Invalid token' });
     }
   }
