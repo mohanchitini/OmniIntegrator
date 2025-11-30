@@ -231,18 +231,25 @@ const authController = {
 
   syncTrelloData: async (req, res) => {
     try {
-      const TrelloService = require('../services/trelloService');
+      const { token } = req.body;
       
-      // Get the most recent token
-      const tokenRecord = await prisma.trelloToken.findFirst({
-        orderBy: { createdAt: 'desc' }
-      });
+      // Get the most recent token from database, or use one from request
+      let trelloToken = token;
+      
+      if (!trelloToken) {
+        const tokenRecord = await prisma.trelloToken.findFirst({
+          orderBy: { createdAt: 'desc' }
+        });
 
-      if (!tokenRecord) {
-        return res.status(400).json({ error: 'No Trello token found. Please save token first.' });
+        if (!tokenRecord) {
+          return res.status(400).json({ error: 'No Trello token found. Please provide token in request body or save token first.' });
+        }
+        
+        trelloToken = tokenRecord.accessToken;
       }
 
-      const trelloService = new TrelloService(tokenRecord.accessToken);
+      const TrelloService = require('../services/trelloService');
+      const trelloService = new TrelloService(trelloToken);
       
       // Fetch all boards
       const boards = await trelloService.getBoards();
