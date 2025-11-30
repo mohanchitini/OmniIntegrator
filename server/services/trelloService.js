@@ -10,6 +10,13 @@ class TrelloService {
 
   async getBoards() {
     try {
+      logger.info('TrelloService debug:', {
+        hasToken: !!this.accessToken,
+        tokenLength: this.accessToken?.length,
+        hasKey: !!process.env.TRELLO_CLIENT_ID,
+        keyLength: process.env.TRELLO_CLIENT_ID?.length
+      });
+      
       const response = await axios.get(`${TRELLO_API_BASE}/members/me/boards`, {
         params: {
           token: this.accessToken,
@@ -19,7 +26,7 @@ class TrelloService {
       logger.info('Fetched Trello boards successfully');
       return response.data;
     } catch (error) {
-      logger.error('Error fetching Trello boards:', error.message);
+      logger.error('Error fetching Trello boards:', error.response?.status, error.response?.data || error.message);
       throw error;
     }
   }
