@@ -106,13 +106,17 @@
                     throw new Error('No token received from Trello');
                 }
 
+                // Extract email from query parameters
+                const queryParams = new URLSearchParams(window.location.search);
+                const email = queryParams.get('email');
+
                 // Send token to backend
                 const response = await fetch('/api/auth/trello/callback', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ token })
+                    body: JSON.stringify({ token, email })
                 });
 
                 const data = await response.json();

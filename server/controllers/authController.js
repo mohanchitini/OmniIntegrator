@@ -25,23 +25,41 @@ const authController = {
 
   handleTrelloCallback: async (req, res) => {
     try {
-      // Extract token from request body (sent by client-side callback handler)
+      // Extract token and email from request body
       const trelloToken = req.body.token;
+      const cliqEmail = req.body.email;
       
-      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing' });
+      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing', email: cliqEmail });
       
       if (!trelloToken) {
         logger.error('Token is missing from Trello callback');
         return res.status(400).json({ error: 'Token is required but was not provided by Trello' });
       }
 
-      // Create or get user
-      let user = await prisma.user.create({
-        data: {
-          email: `user_${Date.now()}@trello-cliq.local`,
-          name: 'Trello User'
+      // Find or create user with Cliq email if provided
+      let user;
+      if (cliqEmail) {
+        user = await prisma.user.findFirst({
+          where: { email: cliqEmail }
+        });
+        
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email: cliqEmail,
+              name: 'Cliq User'
+            }
+          });
         }
-      });
+      } else {
+        // Fallback: create user with generic email if no Cliq email provided
+        user = await prisma.user.create({
+          data: {
+            email: `user_${Date.now()}@trello-cliq.local`,
+            name: 'Trello User'
+          }
+        });
+      }
 
       // Save Trello token
       await prisma.trelloToken.create({
@@ -59,7 +77,7 @@ const authController = {
         { expiresIn: '30d' }
       );
 
-      logger.info(`Trello authentication successful for user ${user.id}`);
+      logger.info(`Trello authentication successful for user ${user.id} (${user.email})`);
       
       return res.json({
         success: true,
