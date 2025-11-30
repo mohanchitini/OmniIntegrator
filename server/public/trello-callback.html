@@ -69,6 +69,9 @@
             font-size: 48px;
             margin-bottom: 20px;
         }
+        #tokenForm {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +97,9 @@
         </div>
     </div>
 
+    <!-- Hidden form for POST submission -->
+    <form id="tokenForm" method="POST" style="display: none;"></form>
+
     <script>
         async function handleTrelloCallback() {
             try {
@@ -106,16 +112,26 @@
                     throw new Error('No token received from Trello');
                 }
 
-                // Send token to backend
-                // Use local backend during development, Render in production
-                const isLocal = window.location.hostname !== 'trello-cliq-backend.onrender.com';
-                const backendUrl = isLocal ? window.location.origin : 'https://trello-cliq-backend.onrender.com';
-                console.log('Using backend:', backendUrl);
+                console.log('Token received:', token.substring(0, 10) + '...');
+
+                // Create a simple form and submit it (avoids CORS issues)
+                const form = document.getElementById('tokenForm');
+                form.action = '/api/auth/trello/callback';
+                form.method = 'POST';
                 
-                const response = await fetch(`${backendUrl}/api/auth/trello/callback`, {
+                // Add hidden input with token
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'token';
+                input.value = token;
+                form.appendChild(input);
+
+                // Listen for response before submitting
+                // We'll use fetch with proper error handling
+                const response = await fetch('/api/auth/trello/callback', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ token })
                 });
@@ -123,7 +139,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Authentication failed');
+                    throw new Error(data.error || `HTTP ${response.status}: Authentication failed`);
                 }
 
                 // Show success message
@@ -135,8 +151,9 @@
                     localStorage.setItem('jwtToken', data.token);
                     localStorage.setItem('userId', data.userId);
                 }
+                
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error:', error.message);
                 document.querySelector('.loading').style.display = 'none';
                 document.querySelector('.error').style.display = 'block';
                 document.getElementById('error-message').textContent = error.message;
