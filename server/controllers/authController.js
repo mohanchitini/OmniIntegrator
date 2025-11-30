@@ -29,7 +29,12 @@ const authController = {
       const trelloToken = req.body.token;
       const normalizedEmail = req.body.email?.toLowerCase().trim();
       
-      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing', email: normalizedEmail });
+      console.log('🔥 TRELLO CALLBACK CALLED');
+      console.log('Token:', trelloToken ? 'YES' : 'NO');
+      console.log('Email:', normalizedEmail);
+      console.log('Body:', JSON.stringify(req.body));
+      
+      logger.info('🔥 Trello callback received', { token: trelloToken ? 'present' : 'missing', email: normalizedEmail });
       
       if (!trelloToken) {
         logger.error('Token is missing from Trello callback');
