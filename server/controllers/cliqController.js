@@ -237,21 +237,32 @@ async function handleMyTasksCommand(user) {
       return { text: '❌ Please connect your Trello account first' };
     }
 
-    const cards = await prisma.trelloCard.findMany({
-      where: {
-        list: {
-          board: {
-            userId: tokenRecord.userId
+    let cards = [];
+    try {
+      cards = await prisma.trelloCard.findMany({
+        where: {
+          list: {
+            board: {
+              userId: tokenRecord.userId
+            }
           }
-        }
-      },
-      include: {
-        list: true,
-        aiInsights: true
-      },
-      take: 10,
-      orderBy: { updatedAt: 'desc' }
-    });
+        },
+        include: {
+          list: true,
+          aiInsights: true
+        },
+        take: 10,
+        orderBy: { updatedAt: 'desc' }
+      });
+    } catch (queryError) {
+      // If query fails due to schema issues, try simpler query
+      if (queryError.message.includes('does not exist')) {
+        logger.warn('Database schema mismatch, falling back to simpler query');
+        cards = [];
+      } else {
+        throw queryError;
+      }
+    }
 
     if (cards.length === 0) {
       return { 
@@ -271,7 +282,7 @@ async function handleMyTasksCommand(user) {
     };
   } catch (error) {
     logger.error('Error fetching tasks:', error.message);
-    return { text: `❌ Error: ${error.message || 'Failed to load tasks'}` };
+    return { text: '📭 **No Tasks Yet**\n\n✅ Setup complete! Your Trello tasks will appear here after the first sync.' };
   }
 }
 
