@@ -8,9 +8,13 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      // Use production backend URL for Trello callbacks
-      const baseUrl = process.env.BACKEND_URL || 'https://trello-cliq-backend.onrender.com';
+      // Get the origin from request or use environment
+      const protocol = req.protocol || 'https';
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
       const callbackUrl = `${baseUrl}/trello-callback.html`;
+      
+      console.log('🔥 Auth URL:', { protocol, host, baseUrl, callbackUrl });
       
       const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
       
