@@ -152,26 +152,40 @@ async function handleConnectCommand(user) {
 
 async function handleBoardsCommand(user) {
   try {
-    const userRecord = await prisma.user.findFirst({
+    logger.info(`handleBoardsCommand called for user email: ${user.email}`);
+    
+    let userRecord = await prisma.user.findFirst({
       where: { email: user.email }
     });
 
     if (!userRecord) {
-      return { text: '❌ Please connect your Trello account first using `/trello connect`' };
+      logger.warn(`User not found with email ${user.email}, creating new user`);
+      // Create user if doesn't exist
+      userRecord = await prisma.user.create({
+        data: {
+          email: user.email,
+          name: user.name || 'Cliq User'
+        }
+      });
     }
 
+    logger.info(`Looking for Trello token for userId: ${userRecord.id}`);
+    
     const tokenRecord = await prisma.trelloToken.findFirst({
       where: { userId: userRecord.id },
       orderBy: { createdAt: 'desc' }
     });
 
     if (!tokenRecord) {
-      return { text: '❌ Please connect your Trello account first using `/trello connect`' };
+      logger.warn(`No Trello token found for userId ${userRecord.id}`);
+      return { text: '❌ No Trello connection found. Please use `/connect` to authorize Trello first.' };
     }
 
+    logger.info(`Found Trello token, fetching boards`);
     const trelloService = new TrelloService(tokenRecord.accessToken);
     const boards = await trelloService.getBoards();
 
+    logger.info(`Fetched ${boards.length} boards`);
     const boardsList = boards.slice(0, 10).map(board => 
       `• **${board.name}** (${board.id})`
     ).join('\n');
@@ -181,6 +195,7 @@ async function handleBoardsCommand(user) {
     };
   } catch (error) {
     logger.error('Error fetching boards:', error.message);
+    logger.error('Stack:', error.stack);
     return { text: '❌ Failed to fetch boards. Please check your Trello connection.' };
   }
 }
