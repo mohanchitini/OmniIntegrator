@@ -36,7 +36,7 @@ const authController = {
         return res.status(400).json({ error: 'Token is required but was not provided by Trello' });
       }
 
-      // Find or create user with Cliq email if provided
+      // Find or update user with Cliq email
       let user;
       if (cliqEmail) {
         user = await prisma.user.findFirst({
@@ -50,15 +50,19 @@ const authController = {
               name: 'Cliq User'
             }
           });
+          logger.info(`Created new user: ${user.id} (${cliqEmail})`);
+        } else {
+          logger.info(`Found existing user: ${user.id} (${cliqEmail})`);
         }
       } else {
-        // Fallback: create user with generic email if no Cliq email provided
+        // Fallback if no email
         user = await prisma.user.create({
           data: {
             email: `user_${Date.now()}@trello-cliq.local`,
             name: 'Trello User'
           }
         });
+        logger.warn('No email provided in callback, created user with fallback email');
       }
 
       // Save Trello token
@@ -69,6 +73,7 @@ const authController = {
           expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
         }
       });
+      logger.info(`Trello token saved for user ${user.id}`);
 
       // Generate JWT token
       const jwtToken = jwt.sign(

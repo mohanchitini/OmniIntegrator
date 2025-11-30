@@ -121,13 +121,33 @@ const cliqController = {
 };
 
 async function handleConnectCommand(user) {
-  // Construct proper Trello OAuth URL with user email encoded as parameter
-  const callbackUrl = `https://trello-cliq-backend.onrender.com/trello-callback.html?email=${encodeURIComponent(user.email)}`;
-  const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
-  
-  return {
-    text: `🔗 **Connect to Trello**\n\nClick here to authorize: [Connect Trello](${authUrl})`
-  };
+  try {
+    // Create or update user with Cliq email first
+    let userRecord = await prisma.user.findFirst({
+      where: { email: user.email }
+    });
+    
+    if (!userRecord) {
+      userRecord = await prisma.user.create({
+        data: {
+          email: user.email,
+          name: user.name || 'Cliq User'
+        }
+      });
+      logger.info(`Created new user: ${userRecord.id} (${userRecord.email})`);
+    }
+    
+    // Construct Trello OAuth URL with email encoded as parameter
+    const callbackUrl = `https://trello-cliq-backend.onrender.com/trello-callback.html?email=${encodeURIComponent(user.email)}`;
+    const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
+    
+    return {
+      text: `🔗 **Connect to Trello**\n\nClick here to authorize: [Connect Trello](${authUrl})`
+    };
+  } catch (error) {
+    logger.error('Error in handleConnectCommand:', error.message);
+    return { text: '❌ Error preparing connection. Please try again.' };
+  }
 }
 
 async function handleBoardsCommand(user) {

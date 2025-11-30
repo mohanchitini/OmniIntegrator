@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "python-3.11"]
+modules = ["nodejs-20", "python-3.11", "postgresql-16"]
 [agent]
 expertMode = true
 
@@ -70,3 +70,6 @@ externalPort = 8000
 [deployment]
 deploymentTarget = "vm"
 run = ["bash", "-c", "cd server && npm start & cd ai-service && python main.py"]
+
+[nix]
+channel = "stable-25_05"
