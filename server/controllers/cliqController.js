@@ -205,16 +205,8 @@ async function handleCreateCardCommand(args, user) {
     const [listId, ...nameParts] = args;
     const name = nameParts.join(' ');
 
-    const userRecord = await prisma.user.findFirst({
-      where: { email: user.email }
-    });
-
-    if (!userRecord) {
-      return { text: '❌ Please connect your Trello account first' };
-    }
-
+    // Get the most recent token (same as /boards)
     const tokenRecord = await prisma.trelloToken.findFirst({
-      where: { userId: userRecord.id },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -236,11 +228,12 @@ async function handleCreateCardCommand(args, user) {
 
 async function handleMyTasksCommand(user) {
   try {
-    const userRecord = await prisma.user.findFirst({
-      where: { email: user.email }
+    // Get the most recent token (same as /boards)
+    const tokenRecord = await prisma.trelloToken.findFirst({
+      orderBy: { createdAt: 'desc' }
     });
 
-    if (!userRecord) {
+    if (!tokenRecord) {
       return { text: '❌ Please connect your Trello account first' };
     }
 
@@ -249,7 +242,7 @@ async function handleMyTasksCommand(user) {
         closed: false,
         list: {
           board: {
-            userId: userRecord.id
+            userId: tokenRecord.userId
           }
         }
       },
@@ -276,17 +269,18 @@ async function handleMyTasksCommand(user) {
     };
   } catch (error) {
     logger.error('Error fetching tasks:', error.message);
-    return { text: '❌ Failed to fetch tasks' };
+    return { text: `❌ Error fetching tasks: ${error.message}` };
   }
 }
 
 async function handleSummaryCommand(user) {
   try {
-    const userRecord = await prisma.user.findFirst({
-      where: { email: user.email }
+    // Get the most recent token (same as /boards)
+    const tokenRecord = await prisma.trelloToken.findFirst({
+      orderBy: { createdAt: 'desc' }
     });
 
-    if (!userRecord) {
+    if (!tokenRecord) {
       return { text: '❌ Please connect your Trello account first' };
     }
 
@@ -296,7 +290,7 @@ async function handleSummaryCommand(user) {
         closed: false,
         list: {
           board: {
-            userId: userRecord.id
+            userId: tokenRecord.userId
           }
         }
       },
