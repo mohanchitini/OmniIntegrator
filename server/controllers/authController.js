@@ -8,21 +8,49 @@ const prisma = new PrismaClient();
 const authController = {
   getTrelloAuthUrl: (req, res) => {
     try {
-      // Get the origin from request or use environment
-      const protocol = req.protocol || 'https';
+      // Force HTTPS (Trello requires HTTPS for callbacks)
       const host = req.get('host');
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = `https://${host}`;
       const callbackUrl = `${baseUrl}/trello-callback.html`;
-      
-      console.log('🔥 Auth URL:', { protocol, host, baseUrl, callbackUrl });
       
       const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
       
-      logger.info('Trello auth URL generated', { callbackUrl });
+      logger.info('Trello auth URL', { callbackUrl });
       res.json({ authUrl });
     } catch (error) {
       logger.error('Error generating Trello auth URL:', error.message);
       res.status(500).json({ error: 'Failed to generate auth URL' });
+    }
+  },
+
+  handleTrelloToken: async (req, res) => {
+    try {
+      const { token, email } = req.body;
+
+      if (!token) {
+        return res.status(400).json({ error: 'Token required' });
+      }
+
+      const userEmail = (email || `trello-${token.substring(0, 8)}@trello.local`).toLowerCase();
+
+      let user = await prisma.user.findFirst({ where: { email: userEmail } });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: { email: userEmail, name: 'Trello User' }
+        });
+      }
+
+      await prisma.trelloToken.create({
+        data: { userId: user.id, accessToken: token }
+      });
+
+      const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+      res.json({ success: true, userId: user.id, token: jwtToken });
+    } catch (error) {
+      logger.error('Token error:', error.message);
+      res.status(500).json({ error: error.message });
     }
   },
 

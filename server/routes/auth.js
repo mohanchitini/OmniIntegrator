@@ -2,11 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// Test endpoint
-router.post('/test', (req, res) => {
-  console.log('✅ TEST ENDPOINT RECEIVED POST');
-  res.json({ success: true, received: req.body });
-});
+// Direct token endpoint (bypasses OAuth callback complexity)
+router.post('/trello/token', authController.handleTrelloToken);
 
 router.get('/trello', authController.getTrelloAuthUrl);
 router.post('/trello/callback', authController.handleTrelloCallback);
