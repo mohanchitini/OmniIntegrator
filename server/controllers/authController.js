@@ -27,20 +27,20 @@ const authController = {
     try {
       // Extract token and email from request body
       const trelloToken = req.body.token;
-      const cliqEmail = req.body.email;
+      const normalizedEmail = req.body.email?.toLowerCase().trim();
       
-      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing', email: cliqEmail });
+      logger.info('Trello callback received', { token: trelloToken ? 'present' : 'missing', email: normalizedEmail });
       
       if (!trelloToken) {
         logger.error('Token is missing from Trello callback');
         return res.status(400).json({ error: 'Token is required but was not provided by Trello' });
       }
 
-      // Find or update user with Cliq email
+      // Find or update user with normalized email
       let user;
-      if (cliqEmail) {
+      if (normalizedEmail) {
         user = await prisma.user.findFirst({
-          where: { email: cliqEmail }
+          where: { email: normalizedEmail }
         });
         
         if (!user) {

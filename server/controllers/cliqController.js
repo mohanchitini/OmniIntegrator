@@ -12,7 +12,8 @@ const cliqController = {
     try {
       const { command, arguments: args, user } = req.body;
 
-      logger.info(`Received Cliq command: ${command}`);
+      logger.info(`Received Cliq command: ${command}`, { userEmail: user?.email, userName: user?.name });
+      console.log('DEBUG: User object:', JSON.stringify(user, null, 2));
 
       let response = { text: 'Command received', isPublic: true };
 
@@ -122,23 +123,28 @@ const cliqController = {
 
 async function handleConnectCommand(user) {
   try {
+    // Normalize email
+    const normalizedEmail = user.email?.toLowerCase().trim();
+    
     // Create or update user with Cliq email first
     let userRecord = await prisma.user.findFirst({
-      where: { email: user.email }
+      where: { email: normalizedEmail }
     });
     
     if (!userRecord) {
       userRecord = await prisma.user.create({
         data: {
-          email: user.email,
+          email: normalizedEmail,
           name: user.name || 'Cliq User'
         }
       });
-      logger.info(`Created new user: ${userRecord.id} (${userRecord.email})`);
+      logger.info(`Created new user: ${userRecord.id} (${normalizedEmail})`);
+    } else {
+      logger.info(`Found existing user: ${userRecord.id} (${normalizedEmail})`);
     }
     
-    // Construct Trello OAuth URL with email encoded as parameter
-    const callbackUrl = `https://trello-cliq-backend.onrender.com/trello-callback.html?email=${encodeURIComponent(user.email)}`;
+    // Construct Trello OAuth URL with normalized email
+    const callbackUrl = `https://trello-cliq-backend.onrender.com/trello-callback.html?email=${encodeURIComponent(normalizedEmail)}`;
     const authUrl = `https://trello.com/1/authorize?expiration=never&name=TrelloCliqIntegrator&scope=read,write&response_type=token&key=${process.env.TRELLO_CLIENT_ID}&return_url=${encodeURIComponent(callbackUrl)}`;
     
     return {
@@ -152,10 +158,12 @@ async function handleConnectCommand(user) {
 
 async function handleBoardsCommand(user) {
   try {
-    logger.info(`handleBoardsCommand called for user email: ${user.email}`);
+    // Normalize email
+    const normalizedEmail = user.email?.toLowerCase().trim();
+    logger.info(`handleBoardsCommand called for user email: ${normalizedEmail}`);
     
     let userRecord = await prisma.user.findFirst({
-      where: { email: user.email }
+      where: { email: normalizedEmail }
     });
 
     if (!userRecord) {
