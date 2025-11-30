@@ -254,7 +254,9 @@ async function handleMyTasksCommand(user) {
     });
 
     if (cards.length === 0) {
-      return { text: '📭 No cards synced yet. Your Trello cards will appear here once synchronized!' };
+      return { 
+        text: '📭 **No Tasks Yet**\n\n✅ Setup complete! Your Trello tasks will appear here after the first sync.\n\n💡 *Tip: Use `/boards` to verify your Trello connection is working.*' 
+      };
     }
 
     const tasksList = cards.map(card => {
@@ -269,7 +271,7 @@ async function handleMyTasksCommand(user) {
     };
   } catch (error) {
     logger.error('Error fetching tasks:', error.message);
-    return { text: `❌ Error fetching tasks: ${error.message}` };
+    return { text: `❌ Error: ${error.message || 'Failed to load tasks'}` };
   }
 }
 
@@ -325,8 +327,14 @@ async function handleSummaryCommand(user) {
     }
 
     // Build summary response
+    if (cards.length === 0) {
+      return { 
+        text: '📊 **Summary Not Available Yet**\n\n✅ Your setup is complete! Once cards sync from Trello, you\'ll see:\n• Total active cards\n• Priority distribution\n• Productivity score\n• Completion rate'
+      };
+    }
+
     let summaryText = `📊 **Trello Summary**\n\n`;
-    summaryText += `📋 Total Active Cards: ${cards.length}\n`;
+    summaryText += `📋 Total Cards: ${cards.length}\n`;
     
     if (aiAnalytics) {
       summaryText += `✅ Completed: ${aiAnalytics.completed}\n`;
@@ -336,13 +344,13 @@ async function handleSummaryCommand(user) {
       summaryText += `📈 Productivity Score: ${aiAnalytics.productivity_score}%\n`;
       summaryText += `⏳ Completion Rate: ${aiAnalytics.completion_rate}%`;
     } else {
-      summaryText += `⚠️ AI analytics unavailable (running in rule-based mode)`;
+      summaryText += `⚠️ AI analytics unavailable (running in basic mode)`;
     }
 
     return { text: summaryText };
   } catch (error) {
     logger.error('Error generating summary:', error.message);
-    return { text: '❌ Failed to generate summary' };
+    return { text: '❌ Error: ' + (error.message || 'Failed to generate summary') };
   }
 }
 
