@@ -158,38 +158,24 @@ async function handleConnectCommand(user) {
 
 async function handleBoardsCommand(user) {
   try {
-    // Normalize email
-    const normalizedEmail = user.email?.toLowerCase().trim();
-    logger.info(`handleBoardsCommand called for user email: ${normalizedEmail}`);
+    logger.info(`handleBoardsCommand called`, { email: user.email, name: user.name });
     
-    let userRecord = await prisma.user.findFirst({
-      where: { email: normalizedEmail }
-    });
-
-    if (!userRecord) {
-      logger.warn(`User not found with email ${user.email}, creating new user`);
-      // Create user if doesn't exist
-      userRecord = await prisma.user.create({
-        data: {
-          email: user.email,
-          name: user.name || 'Cliq User'
-        }
-      });
-    }
-
-    logger.info(`Looking for Trello token for userId: ${userRecord.id}`);
-    
-    const tokenRecord = await prisma.trelloToken.findFirst({
-      where: { userId: userRecord.id },
+    // Just get ALL tokens from database and return them for debugging
+    const allTokens = await prisma.trelloToken.findMany({
+      include: { user: true },
       orderBy: { createdAt: 'desc' }
     });
-
-    if (!tokenRecord) {
-      logger.warn(`No Trello token found for userId ${userRecord.id}`);
-      return { text: '❌ No Trello connection found. Please use `/connect` to authorize Trello first.' };
+    
+    logger.info(`Total Trello tokens in database: ${allTokens.length}`);
+    
+    if (allTokens.length === 0) {
+      return { text: '❌ No Trello tokens found in database. Please use `/connect` first.' };
     }
-
-    logger.info(`Found Trello token, fetching boards`);
+    
+    // Use the most recent token
+    const tokenRecord = allTokens[0];
+    logger.info(`Using token from user: ${tokenRecord.user.email}`);
+    
     const trelloService = new TrelloService(tokenRecord.accessToken);
     const boards = await trelloService.getBoards();
 
@@ -204,7 +190,7 @@ async function handleBoardsCommand(user) {
   } catch (error) {
     logger.error('Error fetching boards:', error.message);
     logger.error('Stack:', error.stack);
-    return { text: '❌ Failed to fetch boards. Please check your Trello connection.' };
+    return { text: `❌ Error: ${error.message}` };
   }
 }
 
