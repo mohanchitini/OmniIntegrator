@@ -25,78 +25,63 @@ const authController = {
 
   handleTrelloCallback: async (req, res) => {
     try {
-      // Extract token and email from request body
       const trelloToken = req.body.token;
-      const normalizedEmail = req.body.email?.toLowerCase().trim();
-      
-      console.log('🔥 TRELLO CALLBACK CALLED');
-      console.log('Token:', trelloToken ? 'YES' : 'NO');
-      console.log('Email:', normalizedEmail);
-      console.log('Body:', JSON.stringify(req.body));
-      
-      logger.info('🔥 Trello callback received', { token: trelloToken ? 'present' : 'missing', email: normalizedEmail });
       
       if (!trelloToken) {
-        logger.error('Token is missing from Trello callback');
-        return res.status(400).json({ error: 'Token is required but was not provided by Trello' });
+        logger.error('Token missing');
+        return res.status(400).json({ error: 'Token required' });
       }
 
-      // Find or update user with normalized email
-      let user;
-      if (normalizedEmail) {
-        user = await prisma.user.findFirst({
-          where: { email: normalizedEmail }
-        });
-        
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: cliqEmail,
-              name: 'Cliq User'
-            }
-          });
-          logger.info(`Created new user: ${user.id} (${cliqEmail})`);
-        } else {
-          logger.info(`Found existing user: ${user.id} (${cliqEmail})`);
-        }
-      } else {
-        // Fallback if no email
+      // Get user info from Trello API using token
+      logger.info('Fetching user info from Trello...');
+      const trelloUserResponse = await axios.get('https://api.trello.com/1/members/me', {
+        params: { token: trelloToken }
+      });
+
+      const trelloUser = trelloUserResponse.data;
+      const userEmail = (trelloUser.email || `trello-${trelloUser.id}@trello.local`).toLowerCase().trim();
+
+      logger.info('Got Trello user', { email: userEmail, id: trelloUser.id });
+
+      // Find or create user
+      let user = await prisma.user.findFirst({
+        where: { email: userEmail }
+      });
+
+      if (!user) {
         user = await prisma.user.create({
           data: {
-            email: `user_${Date.now()}@trello-cliq.local`,
-            name: 'Trello User'
+            email: userEmail,
+            name: trelloUser.fullName || 'Trello User'
           }
         });
-        logger.warn('No email provided in callback, created user with fallback email');
+        logger.info(`Created user: ${user.id}`);
       }
 
-      // Save Trello token
+      // Save token
       await prisma.trelloToken.create({
         data: {
           userId: user.id,
-          accessToken: trelloToken,
-          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          accessToken: trelloToken
         }
       });
-      logger.info(`Trello token saved for user ${user.id}`);
+      logger.info(`✅ Token saved for user ${user.id}`);
 
-      // Generate JWT token
+      // Generate JWT
       const jwtToken = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
       );
 
-      logger.info(`Trello authentication successful for user ${user.id} (${user.email})`);
-      
       return res.json({
         success: true,
         userId: user.id,
         token: jwtToken,
-        message: 'Trello connected successfully'
+        message: 'Connected!'
       });
     } catch (error) {
-      logger.error('Error handling Trello callback:', error.message);
+      logger.error('Callback error:', error.message);
       res.status(500).json({ error: error.message });
     }
   },
