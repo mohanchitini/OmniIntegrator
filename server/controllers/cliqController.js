@@ -239,7 +239,6 @@ async function handleMyTasksCommand(user) {
 
     const cards = await prisma.trelloCard.findMany({
       where: {
-        closed: false,
         list: {
           board: {
             userId: tokenRecord.userId
@@ -255,13 +254,14 @@ async function handleMyTasksCommand(user) {
     });
 
     if (cards.length === 0) {
-      return { text: '📭 No tasks found' };
+      return { text: '📭 No cards found in database. Try running `/sync` first to fetch your cards from Trello.' };
     }
 
     const tasksList = cards.map(card => {
       const priority = card.aiInsights ? card.aiInsights.priority : 'medium';
       const emoji = priority === 'high' ? '🔴' : priority === 'low' ? '🟢' : '🟡';
-      return `${emoji} **${card.name}**\n   📂 ${card.list.name}`;
+      const status = card.closed ? '✅' : '⏳';
+      return `${status} ${emoji} **${card.name}**\n   📂 ${card.list.name}`;
     }).join('\n\n');
 
     return {
@@ -287,7 +287,6 @@ async function handleSummaryCommand(user) {
     // Get all user's cards for analytics
     const cards = await prisma.trelloCard.findMany({
       where: {
-        closed: false,
         list: {
           board: {
             userId: tokenRecord.userId
